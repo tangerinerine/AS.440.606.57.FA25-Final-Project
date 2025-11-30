@@ -1,3 +1,7 @@
+install.packages("haven")   
+install.packages("modelsummary")
+install.packages("fixest")
+
 # All used libraries
 library("knitr")
 library("renv")
@@ -8,13 +12,11 @@ library("viridis")
 library("sjPlot")
 library(rsconnect)
 library(packrat)
-
-install.packages("haven")   
+ 
 library(haven)
-install.packages("fixest")
 library(fixest)
-install.packages("modelsummary")
 library(modelsummary)
+library(gt)
 
 
 
