@@ -252,3 +252,14 @@ modelsummary(
   notes = "Notes: Only the coefficient on Log Settler Mortality is shown. All models include the full set of controls."
 )
 
+# ---  Generate Table for Panel C ---
+modelsummary(
+  ols_models,
+  output = "gt",
+  title = "Table 6, Panel C: OLS Robustness Checks",
+  coef_map = c("avexpr" = "Average Expropriation Risk"),
+  gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+                 list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+  stars = TRUE,
+  notes = "Notes: Only the coefficient on Average Expropriation Risk is shown. All models include the full set of controls."
+)
