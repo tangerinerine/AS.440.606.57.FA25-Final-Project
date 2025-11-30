@@ -1,0 +1,524 @@
+---
+title: "final project 7-9"
+author: "606 group"
+date: "2025-11-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+###Part 7
+
+```{r}
+# NOTE: If some packages are not installed on your machine, uncomment the install lines below
+
+# install.packages(c("haven","fixest","modelsummary","gt","tidyverse","purrr","broom","kableExtra","viridis","sjPlot"))
+
+# Load libraries used across parts
+
+library(haven)        # read_dta
+library(fixest)       # feols
+library(modelsummary) # modelsummary
+library(gt)           # gt tables
+library(tidyverse)    # dplyr, tibble, purrr via tidyverse
+library(purrr)        # explicit for map functions
+library(broom)        # tidy
+library(kableExtra)   # optional formatting
+library(viridis)
+library(sjPlot)
+library(dplyr)
+
+# other libs (unused directly but kept if individual chunks rely on them)
+
+library(rsconnect)
+library(packrat)
+library(devtools)
+library(renv)
+```
+
+
+```{r}
+# --- Load and Prepare Data for Part 7 ---
+
+ajr_data <- read_dta("~/Desktop/maketable5.dta")
+
+# Create the base sample
+
+base_sample <- ajr_dta %>% filter(baseco == 1)
+
+# Create the British colonies subsample
+
+brit_colonies_sample <- base_sample %>% filter(f_brit ==1)
+
+```
+
+
+```{r}
+# --- Run IV and OLS Regressions (Part 7) ---
+
+# IV models (Panels A & B)
+
+iv_models_p5 <- list(
+"(1)" = feols(logpgp95 ~ f_brit + f_french | avexpr ~ logem4, data = base_sample),
+"(2)" = feols(logpgp95 ~ lat_abst + f_brit + f_french | avexpr ~ logem4, data = base_sample),
+"(3)" = feols(logpgp95 ~ 1 | avexpr ~ logem4, data = brit_colonies_sample),
+"(4)" = feols(logpgp95 ~ lat_abst | avexpr ~ logem4, data = brit_colonies_sample),
+"(5)" = feols(logpgp95 ~ sjlofr | avexpr ~ logem4, data = base_sample),
+"(6)" = feols(logpgp95 ~ lat_abst + sjlofr | avexpr ~ logem4, data = base_sample),
+"(7)" = feols(logpgp95 ~ catho80 + muslim80 + no_cpm80 | avexpr ~ logem4, data = base_sample),
+"(8)" = feols(logpgp95 ~ lat_abst + catho80 + muslim80 + no_cpm80 | avexpr ~ logem4, data = base_sample),
+"(9)" = feols(logpgp95 ~ f_french + sjlofr + catho80 + muslim80 + no_cpm80 | avexpr ~ logem4, data = base_sample),
+"(10)" = feols(logpgp95 ~ lat_abst + f_french + sjlofr + catho80 + muslim80 + no_cpm80 | avexpr ~ logem4, data = base_sample)
+)
+
+# OLS models (Panel C)
+
+ols_models_p5 <- list(
+"(1)" = feols(logpgp95 ~ avexpr + f_brit + f_french, data = base_sample),
+"(2)" = feols(logpgp95 ~ avexpr + lat_abst + f_brit + f_french, data = base_sample),
+"(3)" = feols(logpgp95 ~ avexpr, data = brit_colonies_sample),
+"(4)" = feols(logpgp95 ~ avexpr + lat_abst, data = brit_colonies_sample),
+"(5)" = feols(logpgp95 ~ avexpr + sjlofr, data = base_sample),
+"(6)" = feols(logpgp95 ~ avexpr + lat_abst + sjlofr, data = base_sample),
+"(7)" = feols(logpgp95 ~ avexpr + catho80 + muslim80 + no_cpm80, data = base_sample),
+"(8)" = feols(logpgp95 ~ avexpr + lat_abst + catho80 + muslim80 + no_cpm80, data = base_sample),
+"(9)" = feols(logpgp95 ~ avexpr + lat_abst + f_french + sjlofr + catho80 + muslim80 + no_cpm80, data = base_sample)
+)
+
+```
+
+
+```{r}
+# Panel A: IV regressions (Table 5, Panel A)
+
+modelsummary(
+iv_models_p5,
+output = "gt",
+title = "Table 5, Panel A: IV Regressions of Log GDP Per Capita with Additional Controls",
+coef_map = c("fit_avexpr" = "Average Expropriation Risk", "lat_abst" = "Latitude",
+"f_brit" = "British Colony Dummy", "f_french" = "French Colony Dummy",
+"sjlofr" = "French Legal Origin", "catho80" = "Catholic Religion Dummy",
+"muslim80" = "Muslim Religion Dummy", "no_cpm80" = "Other Religion Dummy"),
+gof_map = "nobs",
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel B: First stage
+
+first_stage_models_p5 <- purrr::map(iv_models_p5, ~.$iv_first_stage$avexpr)
+
+modelsummary(
+first_stage_models_p5,
+output = "gt",
+title = "Table 5, Panel B: First-Stage Regressions",
+coef_map = c("logem4" = "Log Settler Mortality", "lat_abst" = "Latitude",
+"f_brit" = "British Colony Dummy", "f_french" = "French Colony Dummy",
+"sjlofr" = "French Legal Origin", "catho80" = "Catholic Religion Dummy",
+"muslim80" = "Muslim Religion Dummy", "no_cpm80" = "Other Religion Dummy",
+"(Intercept)" = "Constant"),
+gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel C: OLS
+
+modelsummary(
+ols_models_p5,
+output = "gt",
+title = "Table 5, Panel C: OLS Regressions",
+coef_map = c("avexpr" = "Average Expropriation Risk"),
+gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# --- Load and Prepare Data for Part 8 ---
+
+ajr_dta6 <- read_dta("~/Desktop/maketable6.dta")
+base_sample6 <- ajr_dta6 %>% filter(baseco == 1)
+
+```
+
+
+```{r}
+# --- Define control sets ---
+
+temp_humid_controls <- "temp1 + temp2 + humid1 + humid2"
+resource_controls <- "steplow + deslow + stepmid + desmid + drystep + drywint + goldm + iron + silv + zinc + oilres + landlock"
+all_controls <- paste("lat_abst", temp_humid_controls, "edes1975", "avelf", resource_controls, sep = " + ")
+
+```
+
+
+```{r}
+# IV models for Part 8 (Table 6)
+
+iv_models_p6 <- list(
+"(1)" = feols(logpgp95 ~ 1 | avexpr ~ logem4, data = base_sample6),
+"(2)" = feols(as.formula(paste("logpgp95 ~ lat_abst +", temp_humid_controls, "| avexpr ~ logem4")), data = base_sample6),
+"(3)" = feols(logpgp95 ~ edes1975 | avexpr ~ logem4, data = base_sample6),
+"(4)" = feols(logpgp95 ~ lat_abst + edes1975 | avexpr ~ logem4, data = base_sample6),
+"(5)" = feols(as.formula(paste("logpgp95 ~", resource_controls, "| avexpr ~ logem4")), data = base_sample6),
+"(6)" = feols(as.formula(paste("logpgp95 ~ lat_abst +", resource_controls, "| avexpr ~ logem4")), data = base_sample6),
+"(7)" = feols(logpgp95 ~ avelf | avexpr ~ logem4, data = base_sample6),
+"(8)" = feols(logpgp95 ~ lat_abst + avelf | avexpr ~ logem4, data = base_sample6),
+"(9)" = feols(as.formula(paste("logpgp95 ~", all_controls, "| avexpr ~ logem4")), data = base_sample6)
+)
+
+# OLS models for Part 8 (Panel C)
+
+ols_models_p6 <- list(
+"(1)" = feols(as.formula(paste("logpgp95 ~ avexpr +", temp_humid_controls)), data = base_sample6),
+"(2)" = feols(as.formula(paste("logpgp95 ~ avexpr + lat_abst +", temp_humid_controls)), data = base_sample6),
+"(3)" = feols(logpgp95 ~ avexpr + edes1975, data = base_sample6),
+"(4)" = feols(logpgp95 ~ avexpr + lat_abst + edes1975, data = base_sample6),
+"(5)" = feols(as.formula(paste("logpgp95 ~ avexpr +", resource_controls)), data = base_sample6),
+"(6)" = feols(as.formula(paste("logpgp95 ~ avexpr + lat_abst +", resource_controls)), data = base_sample6),
+"(7)" = feols(logpgp95 ~ avexpr + avelf, data = base_sample6),
+"(8)" = feols(logpgp95 ~ avexpr + lat_abst + avelf, data = base_sample6),
+"(9)" = feols(as.formula(paste("logpgp95 ~ avexpr +", all_controls)), data = base_sample6)
+)
+
+```
+
+
+```{r}
+# Panel A: Two-stage least squares (Table 6, Panel A)
+
+# Build nicely formatted custom table using gt if desired.
+
+# Here we use a custom, manual build (as in original script) and also provide standard modelsummary as fallback.
+
+# Standard modelsummary output:
+
+modelsummary(
+iv_models_p6,
+output = "gt",
+title = "Table 6, Panel A: Two-Stage Least Squares (standard layout)",
+coef_map = c("fit_avexpr" = "Average Expropriation Risk"),
+gof_map = "nobs",
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel B: First-stage regressions (Table 6, Panel B)
+
+first_stage_p6 <- purrr::map(iv_models_p6, ~.$iv_first_stage$avexpr)
+
+modelsummary(
+first_stage_p6,
+output = "gt",
+title = "Table 6, Panel B: First-Stage Regressions",
+coef_map = c("logem4" = "Log Settler Mortality"),
+gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+stars = TRUE,
+notes = "Notes: Only the coefficient on Log Settler Mortality is shown. All models include the full set of controls."
+)
+
+```
+
+
+```{r}
+# Panel C: OLS robustness checks
+
+modelsummary(
+ols_models_p6,
+output = "gt",
+title = "Table 6, Panel C: OLS Robustness Checks",
+coef_map = c("avexpr" = "Average Expropriation Risk"),
+gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+stars = TRUE,
+notes = "Notes: Only the coefficient on Average Expropriation Risk is shown. All models include the full set of controls."
+)
+
+```
+
+
+```{r}
+# The original script for Part 8.1 included install.packages() calls. They are left commented above.
+
+ajr_dta7 <- read_dta("~/Desktop/finalproject/maketable7.dta")
+
+base_sample7 <- ajr_dta7 %>%
+filter(baseco == 1) %>%
+mutate(other_cont = if_else(shortnam %in% c("AUS", "MLT", "NZL"), 1, 0))
+
+# subsamples
+
+ols_sample_789 <- base_sample7 %>%
+filter(!is.na(logem4), !is.na(latabs) | !is.na(lat_abst), !is.na(lt100km), !is.na(meantemp))
+
+ols_sample_1011 <- base_sample7 %>%
+filter(!is.na(yellow))
+
+```
+
+
+```{r}
+# IV models (Table 7)
+
+iv_models_p7 <- list(
+"(1)" = feols(logpgp95 ~ malfal94 | avexpr ~ logem4, data = base_sample7),
+"(2)" = feols(logpgp95 ~ lat_abst + malfal94 | avexpr ~ logem4, data = base_sample7),
+"(3)" = feols(logpgp95 ~ leb95 | avexpr ~ logem4, data = base_sample7),
+"(4)" = feols(logpgp95 ~ lat_abst + leb95 | avexpr ~ logem4, data = base_sample7),
+"(5)" = feols(logpgp95 ~ imr95 | avexpr ~ logem4, data = base_sample7),
+"(6)" = feols(logpgp95 ~ lat_abst + imr95 | avexpr ~ logem4, data = base_sample7),
+"(7)" = feols(logpgp95 ~ 1 | avexpr + malfal94 ~ logem4 + latabs + lt100km + meantemp, data = base_sample7),
+"(8)" = feols(logpgp95 ~ 1 | avexpr + leb95 ~ logem4 + latabs + lt100km + meantemp, data = base_sample7),
+"(9)" = feols(logpgp95 ~ 1 | avexpr + imr95 ~ logem4 + latabs + lt100km + meantemp, data = base_sample7),
+"(10)" = feols(logpgp95 ~ 1 | avexpr ~ yellow, data = base_sample7),
+"(11)" = feols(logpgp95 ~ africa + asia + other_cont | avexpr ~ yellow, data = base_sample7)
+)
+
+# OLS models (Panel C)
+
+ols_models_p7 <- list(
+"(1)" = feols(logpgp95 ~ avexpr + malfal94, data = base_sample7),
+"(2)" = feols(logpgp95 ~ avexpr + lat_abst + malfal94, data = base_sample7),
+"(3)" = feols(logpgp95 ~ avexpr + leb95, data = base_sample7),
+"(4)" = feols(logpgp95 ~ avexpr + lat_abst + leb95, data = base_sample7),
+"(5)" = feols(logpgp95 ~ avexpr + imr95, data = base_sample7),
+"(6)" = feols(logpgp95 ~ avexpr + lat_abst + imr95, data = base_sample7),
+"(7)" = feols(logpgp95 ~ avexpr + malfal94, data = ols_sample_789),
+"(8)" = feols(logpgp95 ~ avexpr + leb95, data = ols_sample_789),
+"(9)" = feols(logpgp95 ~ avexpr + imr95, data = ols_sample_789),
+"(10)" = feols(logpgp95 ~ avexpr, data = ols_sample_1011),
+"(11)" = feols(logpgp95 ~ avexpr + africa + asia + other_cont, data = ols_sample_1011)
+)
+
+```
+
+
+```{r}
+# Panel A (Table 7, Panel A): 2SLS with geography and health variables
+
+modelsummary(
+iv_models_p7,
+output = "gt",
+title = "Table 7, Panel A: 2SLS Regressions with Geography and Health Variables",
+coef_map = c("fit_avexpr" = "Average Expropriation Risk", "fit_malfal94" = "Malaria Index",
+"fit_leb95" = "Life Expectancy", "fit_imr95" = "Infant Mortality",
+"lat_abst" = "Latitude", "malfal94" = "Malaria Index",
+"leb95" = "Life Expectancy", "imr95" = "Infant Mortality",
+"africa" = "Africa Dummy", "asia" = "Asia Dummy", "other_cont" = "Other Continent Dummy"),
+gof_map = "nobs",
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel B: first-stage for avexpr
+
+first_stage_models_avexpr <- purrr::map(iv_models_p7, ~.$iv_first_stage$avexpr)
+
+modelsummary(
+first_stage_models_avexpr,
+output = "gt",
+title = "Table 7, Panel B: First-Stage Regressions for Expropriation Risk",
+coef_map = c("logem4" = "Log Settler Mortality", "yellow" = "Yellow Fever Dummy",
+"latabs" = "Latitude (abs)", "lt100km" = "Coastal Dummy",
+"meantemp" = "Mean Temperature", "lat_abst" = "Latitude",
+"malfal94" = "Malaria Index", "leb95" = "Life Expectancy", "imr95" = "Infant Mortality",
+"africa" = "Africa Dummy", "asia" = "Asia Dummy", "other_cont" = "Other Continent Dummy",
+"(Intercept)" = "Constant"),
+gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel C: OLS regressions (Table 7 Panel C)
+
+modelsummary(
+ols_models_p7,
+output = "gt",
+title = "Table 7, Panel C: OLS Regressions with Geography and Health Variables",
+coef_map = c("avexpr" = "Average Expropriation Risk", "lat_abst" = "Latitude",
+"malfal94" = "Malaria Index", "leb95" = "Life Expectancy",
+"imr95" = "Infant Mortality", "africa" = "Africa Dummy",
+"asia" = "Asia Dummy", "other_cont" = "Other Continent Dummy"),
+gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# --- Load and Prepare Data for Part 9 ---
+
+ajr_dta8 <- read_dta("/Users/xavier/Downloads/colonial_origins/maketable8/maketable8.dta")
+base_sample8 <- ajr_dta8 %>% filter(baseco == 1)
+
+```
+
+
+```{r}
+# Panel A & B: alternative instruments
+
+panel_AB_models <- list(
+"(1)" = feols(logpgp95 ~ 1 | avexpr ~ euro1900, data = base_sample8),
+"(2)" = feols(logpgp95 ~ lat_abst | avexpr ~ euro1900, data = base_sample8),
+"(3)" = feols(logpgp95 ~ 1 | avexpr ~ cons00a, data = base_sample8),
+"(4)" = feols(logpgp95 ~ lat_abst | avexpr ~ cons00a, data = base_sample8),
+"(5)" = feols(logpgp95 ~ 1 | avexpr ~ democ00a, data = base_sample8),
+"(6)" = feols(logpgp95 ~ lat_abst | avexpr ~ democ00a, data = base_sample8),
+"(7)" = feols(logpgp95 ~ indtime | avexpr ~ cons1, data = base_sample8),
+"(8)" = feols(logpgp95 ~ lat_abst + indtime | avexpr ~ cons1, data = base_sample8),
+"(9)" = feols(logpgp95 ~ indtime | avexpr ~ democ1, data = base_sample8),
+"(10)" = feols(logpgp95 ~ lat_abst + indtime | avexpr ~ democ1, data = base_sample8)
+)
+
+# Panel C: overidentification tests (multiple instruments)
+
+panel_C_models <- list(
+"(1)" = feols(logpgp95 ~ 1 | avexpr ~ euro1900 + logem4, data = base_sample8),
+"(2)" = feols(logpgp95 ~ lat_abst | avexpr ~ euro1900 + logem4, data = base_sample8),
+"(3)" = feols(logpgp95 ~ 1 | avexpr ~ cons00a + logem4, data = base_sample8),
+"(4)" = feols(logpgp95 ~ lat_abst | avexpr ~ cons00a + logem4, data = base_sample8),
+"(5)" = feols(logpgp95 ~ 1 | avexpr ~ democ00a + logem4, data = base_sample8),
+"(6)" = feols(logpgp95 ~ lat_abst | avexpr ~ democ00a + logem4, data = base_sample8),
+"(7)" = feols(logpgp95 ~ indtime | avexpr ~ cons1 + logem4, data = base_sample8),
+"(8)" = feols(logpgp95 ~ lat_abst + indtime | avexpr ~ cons1 + logem4, data = base_sample8),
+"(9)" = feols(logpgp95 ~ indtime | avexpr ~ democ1 + logem4, data = base_sample8),
+"(10)" = feols(logpgp95 ~ lat_abst + indtime | avexpr ~ democ1 + logem4, data = base_sample8)
+)
+
+# Panel D: IV with mortality as exogenous control
+
+panel_D_models <- list(
+"(1)" = feols(logpgp95 ~ logem4 | avexpr ~ euro1900, data = base_sample8),
+"(2)" = feols(logpgp95 ~ logem4 + lat_abst | avexpr ~ euro1900, data = base_sample8),
+"(3)" = feols(logpgp95 ~ logem4 | avexpr ~ cons00a, data = base_sample8),
+"(4)" = feols(logpgp95 ~ logem4 + lat_abst | avexpr ~ cons00a, data = base_sample8),
+"(5)" = feols(logpgp95 ~ logem4 | avexpr ~ democ00a, data = base_sample8),
+"(6)" = feols(logpgp95 ~ logem4 + lat_abst | avexpr ~ democ00a, data = base_sample8),
+"(7)" = feols(logpgp95 ~ logem4 + indtime | avexpr ~ cons1, data = base_sample8),
+"(8)" = feols(logpgp95 ~ logem4 + lat_abst + indtime | avexpr ~ cons1, data = base_sample8),
+"(9)" = feols(logpgp95 ~ logem4 + indtime | avexpr ~ democ1, data = base_sample8),
+"(10)" = feols(logpgp95 ~ logem4 + lat_abst + indtime | avexpr ~ democ1, data = base_sample8)
+)
+
+```
+
+
+```{r}
+# Panel A: 2SLS with alternative instruments (Table 8, Panel A)
+
+modelsummary(
+panel_AB_models,
+output = "gt",
+title = "Table 8, Panel A: 2SLS with Alternative Instruments",
+coef_map = c("fit_avexpr" = "Average Expropriation Risk", "lat_abst" = "Latitude", "indtime" = "Date of Independence"),
+gof_map = "nobs",
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel B: first-stage for alternative instruments
+
+first_stage_AB <- purrr::map(panel_AB_models, ~.$iv_first_stage$avexpr)
+
+modelsummary(
+first_stage_AB,
+output = "gt",
+title = "Table 8, Panel B: First Stage for Alternative Instruments",
+coef_map = c("euro1900" = "European Settlements in 1900", "cons00a" = "Constraint on Executive in 1900",
+"democ00a" = "Democracy in 1900", "cons1" = "Constraint on Executive at Independence",
+"democ1" = "Democracy at Independence", "lat_abst" = "Latitude", "indtime" = "Date of Independence",
+"(Intercept)" = "Constant"),
+gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel C: Overidentification tests — include Sargan p-value if modelsummary supports it for your feols objects
+
+gof_map_sargan <- list(
+list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+list("raw" = "iv_sargan_p", "clean" = "Sargan Test p-value", "fmt" = 3)
+)
+modelsummary(
+panel_C_models,
+output = "gt",
+title = "Table 8, Panel C: Overidentification Tests",
+coef_map = c("fit_avexpr" = "Average Expropriation Risk", "lat_abst" = "Latitude", "indtime" = "Date of Independence"),
+gof_map = gof_map_sargan,
+stars = TRUE
+)
+
+```
+
+
+```{r}
+# Panel D: 2SLS with log mortality as exogenous control
+
+modelsummary(
+panel_D_models,
+output = "gt",
+title = "Table 8, Panel D: 2SLS with Log Mortality as Exogenous Variable",
+coef_map = c("fit_avexpr" = "Average Expropriation Risk", "logem4" = "Log Settler Mortality",
+"lat_abst" = "Latitude", "indtime" = "Date of Independence"),
+gof_map = "nobs",
+stars = TRUE
+)
+
+```
+
