@@ -32,3 +32,41 @@ model_list <- list(
   "(7)" = feols(loghjypl ~ avexpr, data = ajr_dta, se = "hetero"),
   "(8)" = feols(loghjypl ~ avexpr, data = base_sample, se = "hetero")
 )
+
+# ---  Define Table Components ---
+gof_map <- list(
+  list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+  list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)
+)
+
+
+coef_map <- c("avexpr"    = "Average Expropriation Risk",
+              "lat_abst"  = "Distance from Equator",
+              "africa"    = "Africa",
+              "asia"      = "Asia",
+              "other"     = "Other continents")
+
+
+modelsummary(
+  model_list,
+  output = "gt",
+  title = "Table 2: OLS Regressions",
+  coef_map = coef_map,
+  gof_map = gof_map,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  add_rows = tribble(
+    ~term, ~"(1)", ~"(2)", ~"(3)", ~"(4)", ~"(5)", ~"(6)", ~"(7)", ~"(8)",
+    "Base Sample", "No", "Yes", "No", "No", "Yes", "Yes", "No", "Yes",
+    "Continent Dummies", "No", "No", "No", "Yes", "No", "Yes", "No", "No"
+  ),
+  notes = "Notes: Robust standard errors are in parentheses."
+) %>%
+  # Use gt's tab_spanner to create the correct headers
+  tab_spanner(
+    label = "Dependent variable: Log GDP per capita, 1995",
+    columns = 2:7 # Selects columns for models (1) through (6)
+  ) %>%
+  tab_spanner(
+    label = "Dependent variable: Log output per worker, 1988",
+    columns = 8:9 # Selects columns for models (7) and (8)
+  )
