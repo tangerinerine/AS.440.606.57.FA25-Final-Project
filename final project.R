@@ -1,3 +1,15 @@
+# All used libraries
+library("knitr")
+library("rmarkdown")
+library("renv")
+library("tidyverse")
+library("knitr")
+library("devtools")
+library("viridis")
+library("sjPlot")
+library(rsconnect)
+library(packrat)
+library(kableExtra)
 
 # ---  Load Data ---
 ajr_data <- read_dta("/Users/qiujiechen/Desktop/AE606_Econometrics/colonial_origins/maketable1/maketable1.dta")
