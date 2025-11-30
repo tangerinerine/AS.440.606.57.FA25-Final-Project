@@ -78,6 +78,23 @@ panel_B_models <- list(
   "(10)" = feols(euro1900 ~ logem4 + lat_abst, data = lpgp_sample)
 )
 
+# --- Generate Table for Panel B ---
+modelsummary(
+  panel_B_models,
+  output = "gt",
+  title = "Table 3, Panel B: Determinants of Early Institutions",
+  coef_map = c("euro1900" = "European Settlements in 1900", "logem4" = "Log Settler Mortality",
+               "lat_abst" = "Distance from Equator"),
+  gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+                 list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+  stars = TRUE,
+  notes = "Notes: Standard errors in parentheses."
+) %>%
+  # Add spanners to clarify the dependent variable for each set of columns
+  tab_spanner(label = "Dep. Var: Constraint on Executive in 1900", columns = 2:5) %>%
+  tab_spanner(label = "Dep. Var: Democracy in 1900", columns = 6:9) %>%
+  tab_spanner(label = "Dep. Var: European Settlements in 1900", columns = 10:11)
+
 
 
 # part 8.1
