@@ -1,0 +1,10 @@
+# All used libraries
+library("knitr")
+library("renv")
+library("tidyverse")
+library("knitr")
+library("devtools")
+library("viridis")
+library("sjPlot")
+library(rsconnect)
+library(packrat)
