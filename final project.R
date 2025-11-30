@@ -10,29 +10,25 @@ library("viridis")
 library("sjPlot")
 library(rsconnect)
 library(packrat)
+install.packages("fixest")
+library(fixest)
 
-# --- Load and Prepare Data ---
-ajr_dta <- read_dta("/Users/jiasizhe/Downloads/colonial_origins/maketable3/maketable3.dta")
+# ---  Load Data ---
+ajr_dta <- read_dta("/Users/jiasizhe/Downloads/colonial_origins/maketable2/maketable2.dta")
 
-# Create the main sample used in most regressions for Table 3
-main_sample <- ajr_dta %>%
-  filter(excolony == 1, !is.na(extmort4)) %>%
-  mutate(euro1900 = euro1900 / 100)
+# ---  Create Data Subsets ---
+base_sample <- ajr_dta %>% filter(baseco == 1)
 
-# Create the smaller subsample for regressions that also require log GDP data
-lpgp_sample <- main_sample %>%
-  filter(!is.na(logpgp95))
-
-# --- Run Regressions for Panel A ---
-panel_A_models <- list(
-  "(1)" = feols(avexpr ~ cons00a, data = main_sample),
-  "(2)" = feols(avexpr ~ cons00a + lat_abst, data = main_sample),
-  "(3)" = feols(avexpr ~ democ00a, data = main_sample),
-  "(4)" = feols(avexpr ~ democ00a + lat_abst, data = main_sample),
-  "(5)" = feols(avexpr ~ indtime + cons1, data = main_sample),
-  "(6)" = feols(avexpr ~ indtime + cons1 + lat_abst, data = main_sample),
-  "(7)" = feols(avexpr ~ euro1900, data = main_sample),
-  "(8)" = feols(avexpr ~ euro1900 + lat_abst, data = main_sample),
-  "(9)" = feols(avexpr ~ logem4, data = lpgp_sample), # Uses smaller sample
-  "(10)" = feols(avexpr ~ logem4 + lat_abst, data = lpgp_sample) # Uses smaller sample
+# ---  Run All Regressions ---
+# Note on results: The public data has minor differences from the paper's,
+# so coefficients may not match perfectly.
+model_list <- list(
+  "(1)" = feols(logpgp95 ~ avexpr, data = ajr_dta, se = "hetero"),
+  "(2)" = feols(logpgp95 ~ avexpr, data = base_sample, se = "hetero"),
+  "(3)" = feols(logpgp95 ~ avexpr + lat_abst, data = ajr_dta, se = "hetero"),
+  "(4)" = feols(logpgp95 ~ avexpr + lat_abst + africa + asia + other, data = ajr_dta, se = "hetero"),
+  "(5)" = feols(logpgp95 ~ avexpr + lat_abst, data = base_sample, se = "hetero"),
+  "(6)" = feols(logpgp95 ~ avexpr + lat_abst + africa + asia + other, data = base_sample, se = "hetero"),
+  "(7)" = feols(loghjypl ~ avexpr, data = ajr_dta, se = "hetero"),
+  "(8)" = feols(loghjypl ~ avexpr, data = base_sample, se = "hetero")
 )
