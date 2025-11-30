@@ -33,6 +33,11 @@ model_list <- list(
   "(8)" = feols(loghjypl ~ avexpr, data = base_sample, se = "hetero")
 )
 
+install.packages("gt")
+library(gt)
+install.packages("modelsummary")
+library(modelsummary)
+
 # ---  Define Table Components ---
 gof_map <- list(
   list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
