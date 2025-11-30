@@ -109,7 +109,7 @@ final_table %>%
 
 
 
-#Part 8
+#Part 8 Table 6 Panel ABC
 
 library(fixest)
 library(broom)
