@@ -128,6 +128,7 @@ library(packrat)
 library(kableExtra)
 library(haven)
 library(gt)
+library(modelsummary)
 
 # ---  Load and Prepare Data ---
 ajr_dta <- read_dta("/Users/qiujiechen/Desktop/AE606_Econometrics/colonial_origins/maketable6/maketable6.dta")
@@ -235,3 +236,19 @@ gt(final_table_A, rowname_col = "term") %>%
               column_labels.border.bottom.style = "solid",
               column_labels.border.bottom.width = px(2),
               table_body.border.bottom.style = "none")
+
+# ---  Generate Table for Panel B ---
+first_stage_models <- purrr::map(iv_models, ~.$iv_first_stage$avexpr)
+
+
+modelsummary(
+  first_stage_models,
+  output = "gt",
+  title = "Table 6, Panel B: First-Stage Regressions",
+  coef_map = c("logem4" = "Log Settler Mortality"),
+  gof_map = list(list("raw" = "nobs", "clean" = "Num. Obs.", "fmt" = 0),
+                 list("raw" = "r.squared", "clean" = "R-squared", "fmt" = 3)),
+  stars = TRUE,
+  notes = "Notes: Only the coefficient on Log Settler Mortality is shown. All models include the full set of controls."
+)
+
