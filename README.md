@@ -55,10 +55,10 @@ The figure splits the sample into **three distinct geographic regions**:
 - **Other former colonies**
 
 For each region, a separate scatter plot is generated with:
-✔ Country labels  
-✔ Region-specific point colors  
-✔ OLS fitted regression line without confidence band  
-✔ Clear academic-style formatting  
+- Country labels  
+- Region-specific point colors  
+- OLS fitted regression line without confidence band  
+- Clear academic-style formatting  
 
 ---
 
