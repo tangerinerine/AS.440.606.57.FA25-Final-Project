@@ -27,7 +27,7 @@ We replicate AJR’s Table 1–4 using:
 
 ---
 
-## 3. Results (Summary)
+## 3. Results
 
 Institutions strongly predict GDP (OLS and IV)
 
@@ -110,3 +110,10 @@ for (r in regions) {
 
   print(p)
 }
+
+```
+---
+
+## 5. Summary
+
+This project replicates AJR’s key results and confirms that better institutions strongly promote higher income. IV estimates support a causal link from settler mortality to institutions and modern development. Historical measures also show persistent institutional effects. Overall, the replication deepens understanding of identification, IV methods, and long-run development analysis.
