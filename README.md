@@ -6,7 +6,7 @@ This GitHub repo keeps track of our replication of the main empirical results fr
 ---
 
 ## 1. Data
-All data come from AJR replication files.
+All data come from AJR replication files. Data link: https://www.dropbox.com/scl/fi/tgs2zy2x6g9cnmberwdno/colonial_origins.zip?rlkey=kumc7exsfl95vv5ejj1w1agup&e=1&dl=0
 
 Key variables:
 - **Instrument**: logem4 (settler mortality)
