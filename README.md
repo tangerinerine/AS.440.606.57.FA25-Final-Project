@@ -41,6 +41,8 @@ Findings remain stable across multiple robustness checks
 
 Overall, our replication supports AJR (2001) and does not validate Albouy’s critique.
 
+Our final results are presented in Final.Rmd and FinalProject.pdf .
+
 ---
 
 ## 4. Extentions
