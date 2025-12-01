@@ -28,6 +28,7 @@ Render the full report:
 
 ```r
 rmarkdown::render("FinalProject.Rmd")
+```
 
 ## 3. Results (Summary)
 
