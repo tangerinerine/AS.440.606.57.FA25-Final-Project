@@ -3,6 +3,7 @@ This is the final group project of Jiechen Qiu, Wenjing Ding, Zexi Xu, Sizhe Jia
 
 This GitHub repo keeps track of our replication of the main empirical results from **AJR (2001)** and incorporates insights from their **Reply (2012)** to Albouy.
 
+---
 
 ## 1. Data
 All data come from AJR replication files.
@@ -24,11 +25,7 @@ We replicate AJR’s Table 1–4 using:
 - **First stage & IV (2SLS)**  
 - **Robustness checks** (dropping Africa / Neo-Europes, adding continent dummies)
 
-Render the full report:
-
-```r
-rmarkdown::render("FinalProject.Rmd")
-```
+---
 
 ## 3. Results (Summary)
 
@@ -44,3 +41,73 @@ Findings remain stable across multiple robustness checks
 
 Overall, our replication supports AJR (2001) and does not validate Albouy’s critique.
 
+---
+
+## 4. Extentions
+
+**Figure 1 — Institutions and Economic Development by Region**
+
+This visualization explores the relationship between institutional quality and economic development across former colonies, based on data from Acemoglu, Johnson, and Robinson (2001).
+
+The figure splits the sample into **three distinct geographic regions**:
+- **Africa**
+- **Asia**
+- **Other former colonies**
+
+For each region, a separate scatter plot is generated with:
+✔ Country labels  
+✔ Region-specific point colors  
+✔ OLS fitted regression line without confidence band  
+✔ Clear academic-style formatting  
+
+---
+
+**Purpose of this Visualization**
+
+This analysis supports the empirical results from AJR Table 2 by showing:
+
+> Countries with stronger protection against expropriation (higher avexpr) tend to have significantly higher income levels (log GDP per capita, 1995).
+
+Furthermore, the relationship is **consistently positive** across all regions, suggesting that the institutional effect is not driven only by Africa or any single subset of the data.
+
+---
+
+**Code Used to Generate the Visualization**
+
+```r
+# Create region label
+base_sample <- base_sample %>%
+  mutate(region = case_when(
+    africa == 1 ~ "Africa",
+    asia == 1 ~ "Asia",
+    TRUE ~ "Other"
+  ))
+
+# Define custom colors for each region
+region_colors <- c(
+  "Africa" = "firebrick",
+  "Asia" = "steelblue",
+  "Other" = "darkgreen"
+)
+
+# Generate 3 separate plots
+regions <- unique(base_sample$region)
+
+for (r in regions) {
+  p <- ggplot(
+      base_sample %>% filter(region == r),
+      aes(x = avexpr, y = logpgp95, label = shortnam)
+    ) +
+    geom_point(size = 3, color = region_colors[r]) +  # Different color each plot
+    geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "black") +
+    geom_text_repel(size = 3) +
+    theme_minimal(base_size = 13) +
+    labs(
+      title = paste("Figure 1 -", r, ": Institutions and Development"),
+      subtitle = "OLS trend line without confidence band",
+      x = "Institution Quality (avexpr)",
+      y = "Log GDP per Capita, 1995"
+    )
+
+  print(p)
+}
