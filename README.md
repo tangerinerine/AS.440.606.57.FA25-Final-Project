@@ -60,7 +60,6 @@ For each region, a separate scatter plot is generated with:
 - OLS fitted regression line without confidence band  
 - Clear academic-style formatting  
 
----
 
 **Purpose of this Visualization**
 
@@ -70,7 +69,7 @@ This analysis supports the empirical results from AJR Table 2 by showing:
 
 Furthermore, the relationship is **consistently positive** across all regions, suggesting that the institutional effect is not driven only by Africa or any single subset of the data.
 
----
+
 
 **Code Used to Generate the Visualization**
 
