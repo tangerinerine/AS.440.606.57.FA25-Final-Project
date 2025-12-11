@@ -119,3 +119,5 @@ for (r in regions) {
 ## 5. Summary
 
 This project replicates AJR’s key results and confirms that better institutions strongly promote higher income. IV estimates support a causal link from settler mortality to institutions and modern development. Historical measures also show persistent institutional effects. Overall, the replication deepens understanding of identification, IV methods, and long-run development analysis.
+
+A one-page reflection summary can be found here: https://github.com/tangerinerine/AS.440.606.57.FA25-Final-Project/blob/main/Reflection%20summary.pdf 
